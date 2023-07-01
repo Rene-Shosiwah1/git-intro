@@ -1,0 +1,149 @@
+TASK SETTING UP AN ANSIBLE FRIENDLY ENVIRONMENT:
+
+STEP 1: Create three centos instance at once and name them ansible.
+
+while they are creating name them ansible-master, ansible-target-1, ansible-target-2 and ssh in all three at once.
+==========================================================================
+
+STEP 2: use beneath commands to change the name for all the servers.
+
+sudo hostname ansible-master      NB: for anible-master
+
+sudo hostname ansible-target-1    NB: for ansible-node-1
+
+sudo hostname ansible-target-2    NB: for ansible-node-2
+==============================================================
+
+
+STEP 3: create a common user for all the servers and give it them a commonn password ansible.
+
+the command to create the user is = sudo adduser ansible
+
+[centos@ansible-master ~]$ sudo passwd ansible
+Changing password for user ansible.
+New password: ansible
+BAD PASSWORD: The password is shorter than 8 characters
+Retype new password: ansible
+passwd: all authentication tokens updated successfully.
+[centos@ansible-master ~]$
+
+NB: to check if your user was created you simply cat the password file command = cat /etc/passwd
+
+This what you see when you can that is the most current user you created:
+ansible:x:1001:1001::/home/ansible:/bin/bash
+[centos@ansible-targte-2 ~]$
+
+==============================================================================================
+
+STEP 4:Enter the ssh configuration file and give the ansible nodes ability to use SSH protocol without keys for all Servers:
+
+Do this for ansible-master, ansible-target-1, ansible-target-2
+sudo vi /etc/ssh/sshd_config                    ==location for linux configuration files.
+uncommnet the line that has #PasswordAuthentication yes
+so you just click on your Esc
+then :/PasswordAuthentication yes
+then hit Enter
+you will see #PasswordAuthentication yes
+Now type i
+then remove the #
+now it should be just PasswordAuthentication yes
+again click on Esc
+:/PermitRootLogin yes    note: you need to searc this twice.
+leave it at PermitRootLogin yes
+then Esc 
+then :wq!
+then hit Enter
+
+sudo service sshd restart   nobe: once you finish for any server run it for the changes to take effect
+====================================================================================================
+
+STEP 5: Add our ansible user in a group call the will group which is located in the sudoers file which permits every user work as sudo.
+Note == it allows ansible user to work as root without needing a password.
+Note you do beneath all three servers ansible-master, ansinle-target-1, ansible-target-2.
+sudo vi /etc/sudoers 
+
+While in Esc scroll down to the line that you see allow root to run any commands anywhere.
+
+this what it should look like you only added but the third line
+## Allow root to run any commands anywhere
+root    ALL=(ALL)       ALL
+ansible ALL=(ALL)       NOPASSWD:ALL
+then Esc then :wq!
+==============================================================================================
+
+STEP 6: We install ansible and this should be done only on the master node/ansible-master.
+[centos@ansible-master ~]$ sudo yum install epel-release -y          ===it is the repository where ansible is.
+once you see complet run below.
+[centos@ansible-master ~]$ sudo yum install ansible -y              ===this will create your configuration file which is your host file.
+[centos@ansible-master ~]$ sudo vi /etc/ansible/hosts 
+
+## [webservers]
+## alpha.example.org
+## beta.example.org
+## 192.168.1.100
+## 192.168.1.110
+
+
+Go get the public IPs of ansible-target-1 and ansible-target-2 and your finall output should be like beneath.
+
+[webservers]
+## alpha.example.org
+## beta.example.org
+## 192.168.1.100
+## 192.168.1.110
+3.95.216.110
+18.215.180.147
+
+Now you Esc :wq!
+
+Now logout and login back your ansible user ===>Go Get the public IP of your master node
+[centos@ansible-master ~]$ exit
+logout
+Connection to ec2-34-227-47-34.compute-1.amazonaws.com closed.
+
+User@RENE MINGW64 ~/Downloads
+$ ssh ansible@public ip of ypur master node then do Enter
+are you want to continue= yes
+ansible@34.227.47.34's password:ansible
+[ansible@ansible-master ~]$  this what you should see now .
+========================================================================
+
+This is still on master-node/ansbile-master
+
+STEP 7: LAST step create a key in the master node and share with the other nodes.
+[ansible@ansible-master ~]$ ssh-keygen -t rsa  
+NB: For all the prompts just run enter enter all the way to the end.
+Now change permission with:
+[ansible@ansible-master ~]$ chmod 700 /home/ansible/.ssh
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+exit
+
+ssh ansibl@(pubblic ip address of ansible-master)
+
+password=ansible
+
+ssh-keygen -t rsa
+
+chmod 700 /home/ansible/.ssh
+ssh-copy-id ansible@(public id)
+
+to test connect we run a simple ansible adhoc command which is= ansible webservers -m ping
+
